@@ -1,0 +1,10 @@
+
+/node_modules
+
+.env
+
+
+/uploads/posts/*
+/uploads/reels/*
+/uploads/profile/*
+/uploads/thumbnails/*

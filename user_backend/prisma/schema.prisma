@@ -1,0 +1,230 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// npx prisma generate
+// npx prisma migrate dev --name user_model_defined
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProfileType {
+  PRIVATE
+  PUBLIC
+}
+
+enum PostType {
+  IMAGE
+  VIDEO
+}
+
+enum CommentType {
+  TEXT
+  MEDIA
+}
+
+model User {
+  id                 String            @id @default(uuid())
+  userName           String            @unique
+  name               String?
+  email              String            @unique
+  password           String
+  imageUrl           String?
+  bio                String?
+  userDefaultSavedId String?
+  followerCount      Int               @default(0)
+  followingCount     Int               @default(0)
+  postsCount         Int               @default(0)
+  profileType        ProfileType       @default(PUBLIC)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  followers          Follower[]        @relation("Following")
+  followings         Follower[]        @relation("Followers")
+  posts              Post[]
+  comments           Comment[]
+  commentLikes       CommentLike[]
+  postLikes          PostLike[]
+  UserWatching       UserWatching[]    @relation("MainUser")
+  UserWatched        UserWatching[]    @relation("WatchingUser")
+  UserSaved          UserSaved[]
+  ReelLike           ReelLike[]
+  ReelComment        ReelComment[]
+  ReelCommentLike    ReelCommentLike[]
+}
+
+model Follower {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  isAccepted  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  follower    User     @relation("Followers", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model UserWatching {
+  id         String   @id @default(uuid())
+  userId     String
+  watchingId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation("MainUser", fields: [userId], references: [id])
+  watching   User     @relation("WatchingUser", fields: [watchingId], references: [id])
+
+  @@unique([userId, watchingId])
+}
+
+model UserSaved {
+  id        String          @id @default(uuid())
+  givenName String
+  userId    String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id])
+  posts     UserSavedPost[]
+}
+
+model UserSavedPost {
+  id          String    @id @default(uuid())
+  userSavedId String
+  postId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userSaved   UserSaved @relation(fields: [userSavedId], references: [id])
+  post        Post      @relation(fields: [postId], references: [id])
+
+  @@unique([userSavedId, postId])
+}
+
+model Post {
+  id              String          @id @default(uuid())
+  userId          String
+  description     String?
+  likesCount      Int             @default(0)
+  commentCount    Int             @default(0)
+  viewsCount      Int             @default(0)
+  postUrlCount    Int
+  typeOfPost      PostType
+  isCommentEnable Boolean         @default(true)
+  isLikeVisible   Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation(fields: [userId], references: [id])
+  postUrls        PostUrl[]
+  comments        Comment[]
+  postLikes       PostLike[]
+  userSavedPosts  UserSavedPost[]
+}
+
+model PostUrl {
+  id           String        @id @default(uuid())
+  postId       String
+  url          String
+  index        Int
+  type         PostType
+  likesCount   Int           @default(0)
+  viewsCount   Int           @default(0)
+  reelLength   Int           @default(0)
+  reelAvgWatch Int           @default(0)
+  commentCount Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  ReelLike     ReelLike[]
+  ReelComment  ReelComment[]
+}
+
+model Comment {
+  id              String        @id @default(uuid())
+  postId          String
+  userId          String
+  commentText     String?
+  commentCount    Int           @default(0)
+  likesCount      Int           @default(0)
+  commentType     CommentType   @default(TEXT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  parentCommentId String?
+  post            Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+  commentLikes    CommentLike[]
+  replies         Comment[]     @relation("CommentReplies")
+  parentComment   Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  commentId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([commentId, userId])
+}
+
+model PostLike {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model ReelLike {
+  id        String   @id @default(uuid())
+  reelId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reel      PostUrl  @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([reelId, userId])
+}
+
+model ReelComment {
+  id                  String            @id @default(uuid())
+  reelId              String
+  userId              String
+  commentText         String?
+  commentCount        Int               @default(0)
+  likesCount          Int               @default(0)
+  commentType         CommentType       @default(TEXT)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  parentReelCommentId String?
+  reel                PostUrl           @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user                User              @relation(fields: [userId], references: [id])
+  replies             ReelComment[]     @relation("ReelCommentReplies")
+  parentReelComment   ReelComment?      @relation("ReelCommentReplies", fields: [parentReelCommentId], references: [id], onDelete: Cascade)
+  ReelCommentLike     ReelCommentLike[]
+}
+
+model ReelCommentLike {
+  id            String      @id @default(uuid())
+  reelCommentId String
+  userId        String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  reelComment   ReelComment @relation(fields: [reelCommentId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id])
+
+  @@unique([reelCommentId, userId])
+}
