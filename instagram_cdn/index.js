@@ -81,6 +81,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 dotenv.config();
 const app = express();
+const port = process.env.PORT || 8000;
 
 // app.use(
 //   cors({
@@ -113,6 +114,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/upload", routes);
 
-app.listen(process.env.PORT, () => {
-  console.log(`👁️  Instagram CDN Running on PORT ${process.env.PORT}...`);
+app.listen(port, () => {
+  console.log(`👁️  Instagram CDN Running on PORT ${port}...`);
 });

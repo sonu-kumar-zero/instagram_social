@@ -1,0 +1,15 @@
+{
+  "name": "instagram_all_folders",
+  "version": "1.0.0",
+  "description": "![Instagram Social](https://img.shields.io/badge/Instagram-Social-blue)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "start npm run cdn & start npm run backend & start npm run frontend",
+    "cdn": "nodemon instagram_cdn/index.js",
+    "backend": "nodemon user_backend/server.js",
+    "frontend": "cd instagram_frontend && npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

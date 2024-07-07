@@ -7,6 +7,7 @@ import helmet from "helmet";
 dotenv.config();
 
 const app = express();
+const port = process.env.PORT || 4000;
 
 app.use(helmet());
 app.use(cors());
@@ -22,8 +23,8 @@ app.get("/", (req, res) => {
 import routes from "./routes/index.js";
 app.use(routes);
 
-app.listen(process.env.PORT, () => {
+app.listen(port, () => {
   console.log(
-    `🦋 Instagram Users Server is running on Port ${process.env.PORT}`
+    `🦋 Instagram Users Server is running on Port ${port}`
   );
 });
